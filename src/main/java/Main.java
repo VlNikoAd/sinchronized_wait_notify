@@ -1,37 +1,15 @@
 public class Main {
 
-    static final Store store = new Store(10);
+    public static final int MAX_CONSUMERS = 4;
 
     public static void main(String[] args) {
 
-        new Thread(() -> {
-            synchronized (store) {
-                for (int i = 0; i < store.capacity; i++) {
-                    store.makeCar();
-                    store.notify();
-                }
-            }
-        }).start();
+        final Store store = new Store();
+        for (int i = 1; i <= MAX_CONSUMERS; i++) {
+            new Thread(new Consumer(store), "Покупатель " + i).start();
+        }
 
-        new Thread(() -> {
-            synchronized (store) {
-                for (int i = 0; i < store.capacity; i++) {
-                    System.out.println("Заходит покупатель...");
-                    synchronized (store) {
-                        if (!store.car.isEmpty()) {
-                            System.out.println("Купили" + store.car.remove(0));
-                        } else {
-                            try {
-                                System.out.println("Машин нету...");
-                                store.wait();
-                            } catch (InterruptedException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-                    }
-                }
-            }
-        }).start();
+        new Thread(new Producer(store)).start();
 
     }
 }
